@@ -15,13 +15,17 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Manuscript, Book } from "@shared/schema";
-import { BOOK_GENRES } from "@/lib/constants";
+import { BOOK_GENRES, PUBLISHING_PLANS } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
+import { Link } from "wouter";
+import { Check, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const AuthorDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("manuscripts");
+  const [selectedPlan, setSelectedPlan] = useState<string | null>("basic-plan");
 
   // Enhanced manuscript schema
   const manuscriptFormSchema = insertManuscriptSchema.pick({
@@ -95,6 +99,7 @@ const AuthorDashboard = () => {
             <TabsTrigger value="manuscripts">My Manuscripts</TabsTrigger>
             <TabsTrigger value="books">Published Books</TabsTrigger>
             <TabsTrigger value="new">New Manuscript</TabsTrigger>
+            <TabsTrigger value="publishing-plans">Publishing Plans</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -304,6 +309,149 @@ const AuthorDashboard = () => {
                   </div>
                 </form>
               </Form>
+            </div>
+          </TabsContent>
+
+          {/* Publishing Plans Tab */}
+          <TabsContent value="publishing-plans">
+            <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: "'Merriweather', serif" }}>Publishing Plans</h2>
+            
+            <div className="mb-6">
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                <div className="flex items-start">
+                  <div className="mr-3 text-blue-500">
+                    <i className="ri-information-line text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-blue-800 mb-1">Currently Selected Plan</h3>
+                    {selectedPlan ? (
+                      <p className="text-blue-700">
+                        Your selected plan: <Badge className="ml-1 font-medium">{PUBLISHING_PLANS.find(p => p.id === selectedPlan)?.name || "None"}</Badge>
+                        <span className="ml-2 text-sm">
+                          ({PUBLISHING_PLANS.find(p => p.id === selectedPlan)?.formats.join(", ")})
+                        </span>
+                      </p>
+                    ) : (
+                      <p className="text-blue-700">You haven't selected a publishing plan yet. Choose one below to get started.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-neutral-600 mb-8">
+                Select the publishing plan that best suits your needs. Each plan offers different formats and distribution channels.
+                Once you've selected a plan, we'll guide you through the publishing process.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {PUBLISHING_PLANS.map((plan) => (
+                <Card 
+                  key={plan.id}
+                  className={`relative overflow-hidden ${selectedPlan === plan.id ? 'ring-2 ring-primary' : ''}`}
+                >
+                  {plan.popular && (
+                    <div className="absolute top-0 right-0 bg-primary text-white py-1 px-3 text-xs font-semibold">
+                      POPULAR
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle>{plan.name}</CardTitle>
+                    <CardDescription>{plan.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mb-4">
+                      <span className="text-3xl font-bold">${plan.price}</span>
+                      <span className="text-neutral-600">/{plan.priceUnit}</span>
+                    </div>
+                    
+                    <div className="bg-neutral-100 p-3 rounded-md mb-4">
+                      <p className="text-sm text-neutral-800 font-medium">Available Formats:</p>
+                      <div className="flex gap-2 mt-2">
+                        {plan.formats.map((format, i) => (
+                          <Badge key={i} variant="secondary" className="bg-white">
+                            {format}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 mb-6">
+                      {plan.features.map((feature, index) => (
+                        <div key={index} className="flex items-center">
+                          {feature.included ? (
+                            <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                          ) : (
+                            <X className="h-4 w-4 text-neutral-300 mr-2 flex-shrink-0" />
+                          )}
+                          <span className={`text-sm ${feature.included ? 'text-neutral-800' : 'text-neutral-400'}`}>
+                            {feature.name}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="text-sm text-neutral-600 mb-4">
+                      <i className="ri-time-line mr-1"></i> Estimated timeline: {plan.timeline}
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    {selectedPlan === plan.id ? (
+                      <div className="w-full space-y-2">
+                        <Button variant="outline" className="w-full" onClick={() => setSelectedPlan(null)}>
+                          Deselect Plan
+                        </Button>
+                        <Button className="w-full" onClick={() => setActiveTab("manuscripts")}>
+                          Continue with This Plan
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        className="w-full" 
+                        onClick={() => setSelectedPlan(plan.id)}
+                      >
+                        Select Plan
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+            
+            <div className="mt-12 pt-6 border-t border-neutral-200">
+              <h3 className="text-xl font-bold mb-4" style={{ fontFamily: "'Merriweather', serif" }}>What happens next?</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-semibold mb-3">1</div>
+                  <h4 className="text-lg font-semibold mb-2">Upload your manuscript</h4>
+                  <p className="text-neutral-600 text-sm">Upload your completed manuscript and provide details about your book.</p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-semibold mb-3">2</div>
+                  <h4 className="text-lg font-semibold mb-2">Production process</h4>
+                  <p className="text-neutral-600 text-sm">Our team works on formatting, cover design, and preparing your book for publication.</p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-semibold mb-3">3</div>
+                  <h4 className="text-lg font-semibold mb-2">Distribution & sales</h4>
+                  <p className="text-neutral-600 text-sm">Your book gets distributed to selected platforms and starts selling globally.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-12 text-center">
+              <Button 
+                size="lg" 
+                onClick={() => selectedPlan ? setActiveTab("manuscripts") : null}
+                disabled={!selectedPlan}
+              >
+                {selectedPlan ? "Continue with Selected Plan" : "Please Select a Plan to Continue"}
+              </Button>
+              {selectedPlan && (
+                <p className="mt-2 text-sm text-neutral-600">
+                  You're selecting the {PUBLISHING_PLANS.find(p => p.id === selectedPlan)?.name} plan for ${PUBLISHING_PLANS.find(p => p.id === selectedPlan)?.price}
+                </p>
+              )}
             </div>
           </TabsContent>
 

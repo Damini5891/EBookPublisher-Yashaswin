@@ -40,13 +40,16 @@ export const PUBLISHING_PLANS = [
     description: 'Perfect for new authors',
     price: 99,
     priceUnit: 'book',
+    formats: ['Paperback'],
     features: [
       { name: 'Basic formatting & conversion', included: true },
       { name: 'Standard cover design', included: true },
-      { name: 'Distribution to major stores', included: true },
+      { name: 'Paperback distribution (Amazon, Flipkart)', included: true },
       { name: '70% royalty rate', included: true },
       { name: 'Marketing assistance', included: false },
-      { name: 'Professional editing', included: false }
+      { name: 'Professional editing', included: false },
+      { name: 'E-book format', included: false },
+      { name: 'Audiobook production', included: false }
     ],
     popular: false,
     timeline: '4-6 weeks',
@@ -57,13 +60,16 @@ export const PUBLISHING_PLANS = [
     description: 'For serious authors',
     price: 249,
     priceUnit: 'book',
+    formats: ['Paperback', 'E-book'],
     features: [
       { name: 'Advanced formatting & conversion', included: true },
       { name: 'Custom cover design', included: true },
-      { name: 'Distribution to major stores', included: true },
+      { name: 'Paperback distribution (Amazon, Flipkart, eBay)', included: true },
+      { name: 'E-book distribution (Google Play, Apple Books)', included: true },
       { name: '80% royalty rate', included: true },
       { name: 'Basic marketing assistance', included: true },
-      { name: 'Professional editing', included: false }
+      { name: 'Professional editing', included: false },
+      { name: 'Audiobook production', included: false }
     ],
     popular: true,
     timeline: '3-5 weeks',
@@ -74,10 +80,13 @@ export const PUBLISHING_PLANS = [
     description: 'Complete publishing solution',
     price: 499,
     priceUnit: 'book',
+    formats: ['Paperback', 'E-book', 'Audiobook'],
     features: [
       { name: 'Premium formatting & conversion', included: true },
       { name: 'Professional cover design', included: true },
-      { name: 'Global distribution', included: true },
+      { name: 'Global paperback distribution (Amazon, Flipkart, eBay, Meesho, etc.)', included: true },
+      { name: 'Global e-book distribution (Google Play, Apple Books, Kindle)', included: true },
+      { name: 'Audiobook production and distribution (Audible, iTunes)', included: true },
       { name: '85% royalty rate', included: true },
       { name: 'Comprehensive marketing', included: true },
       { name: 'Professional editing', included: true }

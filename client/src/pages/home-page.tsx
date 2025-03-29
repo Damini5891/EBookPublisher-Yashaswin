@@ -90,13 +90,83 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Global Distribution Section */}
+      <section className="py-16 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: "'Merriweather', serif" }}>Worldwide Distribution</h2>
+            <p className="text-lg text-neutral-800 max-w-3xl mx-auto">
+              Publish your book in multiple formats and reach readers globally through our extensive distribution network.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="ri-book-open-line text-blue-600 text-2xl"></i>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Paperback Books</h3>
+              <p className="text-neutral-700 mb-4">
+                Professional print-on-demand service with global distribution through Amazon, Flipkart, eBay, Meesho and more.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">Amazon</span>
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">Flipkart</span>
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">eBay</span>
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">Meesho</span>
+              </div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="ri-tablet-line text-green-600 text-2xl"></i>
+              </div>
+              <h3 className="text-xl font-bold mb-2">E-Books</h3>
+              <p className="text-neutral-700 mb-4">
+                Format your book for all major e-readers and distribute to leading online bookstores worldwide.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">Google Play Books</span>
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">Apple Books</span>
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">Kindle</span>
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">Kobo</span>
+              </div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="ri-headphone-line text-amber-600 text-2xl"></i>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Audiobooks</h3>
+              <p className="text-neutral-700 mb-4">
+                Professional narration and production with distribution to leading audiobook platforms.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">Audible</span>
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">iTunes</span>
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">Google Play</span>
+                <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-800 text-xs rounded">Spotify</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center">
+            <Link href="/publishing-process">
+              <Button className="px-5 py-2 bg-primary text-white rounded-md font-medium hover:bg-primary/90 transition-colors">
+                Learn More About Our Distribution
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Features Highlight */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: "'Merriweather', serif" }}>Why Choose {APP_NAME}?</h2>
             <p className="text-lg text-neutral-800 max-w-3xl mx-auto">
-              Our platform offers everything you need to transform your manuscript into a professional e-book.
+              Our platform offers everything you need to transform your manuscript into a professional book in any format.
             </p>
           </div>
           
