@@ -19,6 +19,8 @@ import AboutPage from "@/pages/about-page";
 import ContactPage from "@/pages/contact-page";
 import AuthorDashboard from "@/pages/author-dashboard";
 import CheckoutPage from "@/pages/checkout-page";
+import PricingPage from "@/pages/pricing-page";
+import PublishingProcessPage from "@/pages/publishing-process-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -35,6 +37,8 @@ function Router() {
           <Route path="/about" component={AboutPage} />
           <Route path="/contact" component={ContactPage} />
           <Route path="/checkout" component={CheckoutPage} />
+          <Route path="/pricing" component={PricingPage} />
+          <Route path="/publishing-process" component={PublishingProcessPage} />
           <ProtectedRoute path="/dashboard" component={AuthorDashboard} />
           <Route component={NotFound} />
         </Switch>
