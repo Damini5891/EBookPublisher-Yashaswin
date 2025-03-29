@@ -35,6 +35,7 @@ export const BOOK_GENRES = [
 
 export const PUBLISHING_PLANS = [
   {
+    id: "basic-plan",
     name: 'Basic',
     description: 'Perfect for new authors',
     price: 99,
@@ -48,8 +49,10 @@ export const PUBLISHING_PLANS = [
       { name: 'Professional editing', included: false }
     ],
     popular: false,
+    timeline: '4-6 weeks',
   },
   {
+    id: "premium-plan",
     name: 'Premium',
     description: 'For serious authors',
     price: 249,
@@ -63,8 +66,10 @@ export const PUBLISHING_PLANS = [
       { name: 'Professional editing', included: false }
     ],
     popular: true,
+    timeline: '3-5 weeks',
   },
   {
+    id: "professional-plan",
     name: 'Professional',
     description: 'Complete publishing solution',
     price: 499,
@@ -78,6 +83,7 @@ export const PUBLISHING_PLANS = [
       { name: 'Professional editing', included: true }
     ],
     popular: false,
+    timeline: '2-4 weeks',
   }
 ];
 

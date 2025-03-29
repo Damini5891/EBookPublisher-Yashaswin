@@ -35,9 +35,18 @@ export const manuscripts = pgTable("manuscripts", {
   authorId: integer("author_id").references(() => users.id),
   title: text("title").notNull(),
   content: text("content"),
+  description: text("description"),
+  genre: text("genre"),
+  wordCount: integer("word_count"),
   status: text("status").default("draft"),
   coverDesign: text("cover_design"),
-  submittedAt: timestamp("submitted_at").defaultNow(),
+  coverImage: text("cover_image"),
+  feedback: text("feedback"),
+  editorNotes: text("editor_notes"),
+  targetAudience: text("target_audience"),
+  progressStage: integer("progress_stage"),
+  estimatedCompletionDate: timestamp("estimated_completion_date"),
+  createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -106,8 +115,13 @@ export const insertManuscriptSchema = createInsertSchema(manuscripts).pick({
   authorId: true,
   title: true,
   content: true,
-  coverDesign: true,
+  description: true,
+  genre: true,
+  wordCount: true,
   status: true,
+  coverDesign: true,
+  coverImage: true,
+  targetAudience: true,
 });
 
 export const insertOrderSchema = createInsertSchema(orders).pick({
