@@ -223,6 +223,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  app.patch("/api/admin/manuscripts/:id/approve", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid manuscript ID" });
+      }
+      
+      const manuscript = await storage.updateManuscript(id, { status: "approved" });
+      if (!manuscript) {
+        return res.status(404).json({ message: "Manuscript not found" });
+      }
+      
+      // Create notification for author
+      if (manuscript.authorId) {
+        await storage.createNotification({
+          userId: manuscript.authorId,
+          title: "Manuscript Approved",
+          message: `Your manuscript "${manuscript.title}" has been approved!`,
+          type: "manuscript_approved",
+          isRead: false
+        });
+      }
+      
+      res.json(manuscript);
+    } catch (error) {
+      res.status(500).json({ message: "Error approving manuscript" });
+    }
+  });
+  
   app.delete("/api/admin/manuscripts/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

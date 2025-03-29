@@ -24,6 +24,8 @@ const AuthPage = () => {
   useEffect(() => {
     if (initialTab === "register") {
       setActiveTab("register");
+    } else if (initialTab === "admin") {
+      setActiveTab("admin");
     }
   }, [initialTab]);
 
@@ -69,7 +71,7 @@ const AuthPage = () => {
     defaultValues: {
       username: "",
       email: "",
-      fullName: "",
+      fullName: undefined, // Make this undefined instead of empty string to match the schema
       password: "",
       confirmPassword: "",
     },
@@ -86,9 +88,10 @@ const AuthPage = () => {
           {/* Auth Forms */}
           <div className="w-full md:w-1/2 max-w-md mx-auto md:mx-0">
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
+                <TabsTrigger value="admin">Admin</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login">
@@ -197,7 +200,11 @@ const AuthPage = () => {
                             <FormItem>
                               <FormLabel>Full Name (Optional)</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter your full name" {...field} />
+                                <Input 
+                                  placeholder="Enter your full name" 
+                                  {...field} 
+                                  value={field.value || ''} 
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -248,6 +255,77 @@ const AuthPage = () => {
                         className="text-primary hover:underline font-medium"
                       >
                         Sign In
+                      </button>
+                    </p>
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+              
+              {/* Admin Login Tab */}
+              <TabsContent value="admin">
+                <Card className="border-2 border-gray-800">
+                  <CardHeader className="bg-gray-900 text-white">
+                    <CardTitle className="text-2xl font-bold">Admin Portal</CardTitle>
+                    <CardDescription className="text-gray-300">
+                      Secure access for administrators only
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <Form {...loginForm}>
+                      <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                        <FormField
+                          control={loginForm.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Admin Username</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter admin username" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={loginForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Admin Password</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="Enter admin password" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="pt-2">
+                          <Button 
+                            type="submit" 
+                            className="w-full bg-gray-800 hover:bg-gray-700 text-white"
+                            disabled={loginMutation.isPending}
+                          >
+                            {loginMutation.isPending ? "Authenticating..." : "Admin Login"}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                    <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-md">
+                      <p className="text-sm text-amber-800">
+                        <b>Note:</b> This area is restricted to platform administrators. 
+                        If you're looking to publish or purchase books, please use the regular login.
+                      </p>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex flex-col items-center text-sm text-neutral-600 bg-gray-50">
+                    <p>
+                      Need a regular account?{" "}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("login")}
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Go to User Login
                       </button>
                     </p>
                   </CardFooter>

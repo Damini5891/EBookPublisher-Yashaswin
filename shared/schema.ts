@@ -135,6 +135,7 @@ export const insertNotificationSchema = createInsertSchema(notifications).pick({
   title: true,
   message: true,
   type: true,
+  isRead: true,
 });
 
 export const loginSchema = z.object({

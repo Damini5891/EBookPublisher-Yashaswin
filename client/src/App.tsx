@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/providers/auth-provider";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { AdminRoute } from "@/lib/admin-route";
 
 // Layout components
 import Header from "@/components/layout/header";
@@ -22,6 +23,7 @@ import AccountPage from "@/pages/account-page";
 import CheckoutPage from "@/pages/checkout-page";
 import PricingPage from "@/pages/pricing-page";
 import PublishingProcessPage from "@/pages/publishing-process-page";
+import AdminPanel from "@/pages/admin-panel";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -42,6 +44,7 @@ function Router() {
           <Route path="/publishing-process" component={PublishingProcessPage} />
           <ProtectedRoute path="/dashboard" component={AuthorDashboard} />
           <ProtectedRoute path="/account" component={AccountPage} />
+          <AdminRoute path="/admin" component={AdminPanel} />
           <Route component={NotFound} />
         </Switch>
       </main>
