@@ -1,5 +1,9 @@
 import { createContext, ReactNode } from "react";
-import { useQuery, useMutation, UseMutationResult } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  UseMutationResult,
+} from "@tanstack/react-query";
 import { User, InsertUser, Login } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -10,7 +14,11 @@ type AuthContextType = {
   error: Error | null;
   loginMutation: UseMutationResult<Omit<User, "password">, Error, Login>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<Omit<User, "password">, Error, InsertUser>;
+  registerMutation: UseMutationResult<
+    Omit<User, "password">,
+    Error,
+    InsertUser
+  >;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -55,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], userData);
       toast({
         title: "Registration successful",
-        description: `Welcome to PageCraft, ${userData.username}!`,
+        description: `Welcome to Yashaswin, ${userData.username}!`,
       });
     },
     onError: (error: Error) => {

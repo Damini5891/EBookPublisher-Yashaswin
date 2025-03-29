@@ -8,16 +8,37 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { BOOK_GENRES } from "@/lib/constants";
 import { Loader2, Upload, BookIcon, CheckCircle2 } from "lucide-react";
 import { insertManuscriptSchema } from "@shared/schema";
 
 // Extend the schema with additional fields for the form
 const manuscriptSchema = insertManuscriptSchema.extend({
-  file: z.instanceof(FileList).refine(files => files.length > 0, {
+  file: z.instanceof(FileList).refine((files) => files.length > 0, {
     message: "Please upload a manuscript file.",
   }),
   coverImage: z.instanceof(FileList).optional(),
@@ -73,16 +94,16 @@ export const ManuscriptUploadForm = () => {
     formData.append("status", values.status || "draft");
     formData.append("wordCount", values.wordCount?.toString() || "0");
     formData.append("targetAudience", values.targetAudience || "");
-    
+
     // Append the manuscript file
     const file = values.file[0];
     formData.append("file", file);
-    
+
     // Append cover image if provided
     if (values.coverImage?.[0]) {
       formData.append("coverImage", values.coverImage[0]);
     }
-    
+
     uploadMutation.mutate(formData);
   };
 
@@ -95,14 +116,18 @@ export const ManuscriptUploadForm = () => {
           </div>
           <CardTitle>Manuscript Uploaded Successfully!</CardTitle>
           <CardDescription>
-            Our editorial team will review your manuscript and get back to you soon.
+            Our editorial team will review your manuscript and get back to you
+            soon.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="mb-4">
-            You can track the status of your manuscript in your author dashboard.
+            You can track the status of your manuscript in your author
+            dashboard.
           </p>
-          <Button onClick={() => setIsSubmitted(false)}>Submit Another Manuscript</Button>
+          <Button onClick={() => setIsSubmitted(false)}>
+            Submit Another Manuscript
+          </Button>
         </CardContent>
       </Card>
     );
@@ -113,7 +138,8 @@ export const ManuscriptUploadForm = () => {
       <CardHeader>
         <CardTitle>Upload Your Manuscript</CardTitle>
         <CardDescription>
-          Complete the form below to submit your manuscript for review and publication.
+          Complete the form below to submit your manuscript for review and
+          publication.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -126,7 +152,10 @@ export const ManuscriptUploadForm = () => {
                 <FormItem>
                   <FormLabel>Book Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter the title of your book" {...field} />
+                    <Input
+                      placeholder="Enter the title of your book"
+                      {...field}
+                    />
                   </FormControl>
                   <FormDescription>
                     This will be the published title of your book.
@@ -143,14 +172,16 @@ export const ManuscriptUploadForm = () => {
                 <FormItem>
                   <FormLabel>Book Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Provide a compelling description of your book" 
+                    <Textarea
+                      placeholder="Provide a compelling description of your book"
                       className="min-h-32"
-                      {...field} 
+                      {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormDescription>
-                    This will appear on your book's page and help readers discover your work.
+                    This will appear on your book's page and help readers
+                    discover your work.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -163,7 +194,10 @@ export const ManuscriptUploadForm = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Genre</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value ?? undefined}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a genre" />
@@ -201,12 +235,17 @@ export const ManuscriptUploadForm = () => {
                         onChange={(e) => onChange(e.target.files)}
                         {...rest}
                       />
-                      <label htmlFor="manuscript-file" className="cursor-pointer block">
+                      <label
+                        htmlFor="manuscript-file"
+                        className="cursor-pointer block"
+                      >
                         <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                           <Upload className="h-6 w-6 text-primary" />
                         </div>
                         <p className="font-medium">
-                          {value && value[0] ? value[0].name : 'Click to upload your manuscript'}
+                          {value && value[0]
+                            ? value[0].name
+                            : "Click to upload your manuscript"}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
                           DOC, DOCX, PDF, RTF or TXT (max 50MB)
@@ -227,11 +266,14 @@ export const ManuscriptUploadForm = () => {
                   <FormItem>
                     <FormLabel>Estimated Word Count</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="Enter approximate word count" 
+                      <Input
+                        type="number"
+                        placeholder="Enter approximate word count"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)} 
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.valueAsNumber || 0)
+                        }
                       />
                     </FormControl>
                     <FormDescription>
@@ -241,7 +283,7 @@ export const ManuscriptUploadForm = () => {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="targetAudience"
@@ -249,9 +291,9 @@ export const ManuscriptUploadForm = () => {
                   <FormItem>
                     <FormLabel>Target Audience</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="e.g., Young Adult, Business Professionals" 
-                        {...field} 
+                      <Input
+                        placeholder="e.g., Young Adult, Business Professionals"
+                        {...field}
                       />
                     </FormControl>
                     <FormDescription>
@@ -279,12 +321,17 @@ export const ManuscriptUploadForm = () => {
                         onChange={(e) => onChange(e.target.files)}
                         {...rest}
                       />
-                      <label htmlFor="cover-image" className="cursor-pointer block">
+                      <label
+                        htmlFor="cover-image"
+                        className="cursor-pointer block"
+                      >
                         <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                           <BookIcon className="h-6 w-6 text-primary" />
                         </div>
                         <p className="font-medium">
-                          {value && value[0] ? value[0].name : 'Click to upload a cover image'}
+                          {value && value[0]
+                            ? value[0].name
+                            : "Click to upload a cover image"}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
                           JPG, PNG, or GIF (max 5MB)
@@ -293,16 +340,17 @@ export const ManuscriptUploadForm = () => {
                     </div>
                   </FormControl>
                   <FormDescription>
-                    If you don't have a cover image, our design team can create one for you.
+                    If you don't have a cover image, our design team can create
+                    one for you.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={uploadMutation.isPending}
             >
               {uploadMutation.isPending ? (
@@ -318,7 +366,7 @@ export const ManuscriptUploadForm = () => {
         </Form>
       </CardContent>
       <CardFooter className="text-sm text-gray-500 flex justify-center">
-        <p>Need help? Contact our editorial team at support@pagecraft.com</p>
+        <p>Need help? Contact our editorial team at support@Yashaswin.com</p>
       </CardFooter>
     </Card>
   );

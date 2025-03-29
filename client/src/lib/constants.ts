@@ -1,17 +1,17 @@
-export const APP_NAME = 'PageCraft';
+export const APP_NAME = 'Yashaswin';
 export const APP_TAGLINE = 'Transform Your Words Into Published Masterpieces';
 
 export const SOCIAL_LINKS = {
-  facebook: 'https://facebook.com/pagecraft',
-  twitter: 'https://twitter.com/pagecraft',
-  instagram: 'https://instagram.com/pagecraft',
-  linkedin: 'https://linkedin.com/company/pagecraft',
+  facebook: 'https://facebook.com/Yashaswin',
+  twitter: 'https://twitter.com/Yashaswin',
+  instagram: 'https://instagram.com/Yashaswin',
+  linkedin: 'https://linkedin.com/company/Yashaswin',
 };
 
 export const CONTACT_INFO = {
-  email: 'support@pagecraft.com',
-  phone: '+1 (555) 123-4567',
-  address: '123 Publishing Lane, Suite 101, San Francisco, CA 94107',
+  email: 'support@Yashaswin.com',
+  phone: '+91 8006163018',
+  address: 'D-105, Supertech Green Village, Meerut, Uttar Pradesh, India',
 };
 
 export const BUSINESS_HOURS = [
@@ -157,21 +157,21 @@ export const TESTIMONIALS = [
     name: 'Robert Thompson',
     role: 'Fantasy Author',
     rating: 5,
-    text: 'PageCraft made my publishing dreams a reality. The platform is intuitive, the support team is responsive, and the results exceeded my expectations. I\'ve now published three books through them!',
+    text: 'Yashaswin made my publishing dreams a reality. The platform is intuitive, the support team is responsive, and the results exceeded my expectations. I\'ve now published three books through them!',
     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
   },
   {
     name: 'Jennifer Williams',
     role: 'Memoir Writer',
     rating: 5,
-    text: 'As a first-time author, I was intimidated by the publishing process. PageCraft guided me every step of the way. Their tools for formatting and cover design made everything simple.',
+    text: 'As a first-time author, I was intimidated by the publishing process. Yashaswin guided me every step of the way. Their tools for formatting and cover design made everything simple.',
     image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
   },
   {
     name: 'David Rodriguez',
     role: 'Business Author',
     rating: 4.5,
-    text: 'The marketing tools and analytics that PageCraft offers have helped me understand my readers better and grow my audience. My sales have increased by 40% since using their platform.',
+    text: 'The marketing tools and analytics that Yashaswin offers have helped me understand my readers better and grow my audience. My sales have increased by 40% since using their platform.',
     image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
   }
 ];
@@ -179,8 +179,8 @@ export const TESTIMONIALS = [
 export const FEATURED_AUTHOR = {
   name: 'Michelle Davies',
   role: 'Bestselling Author',
-  bio: 'Michelle Davies is a bestselling author of contemporary fiction with over 500,000 copies sold worldwide. Her latest novel "Echoes of Tomorrow" was published through PageCraft and reached #1 on multiple bestseller lists.',
-  quote: 'PageCraft\'s platform made my publishing journey seamless. From manuscript formatting to distribution, their tools and support team exceeded my expectations. I couldn\'t be happier with the results.',
+  bio: 'Michelle Davies is a bestselling author of contemporary fiction with over 500,000 copies sold worldwide. Her latest novel "Echoes of Tomorrow" was published through Yashaswin and reached #1 on multiple bestseller lists.',
+  quote: 'Yashaswin\'s platform made my publishing journey seamless. From manuscript formatting to distribution, their tools and support team exceeded my expectations. I couldn\'t be happier with the results.',
   image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
   stats: [
     { label: 'Books Published', value: '12' },

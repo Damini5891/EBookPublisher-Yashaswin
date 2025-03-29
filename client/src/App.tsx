@@ -34,22 +34,26 @@ import UserDashboard from "@/pages/user-dashboard-new";
 // Admin Header Component
 function AdminHeader() {
   const { logoutMutation } = useAuth();
-  
+
   return (
     <header className="bg-gray-900 text-white shadow-md">
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <Link href="/">
-              <Button variant="outline" size="sm" className="text-white border-white hover:bg-gray-800">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-white border-white hover:bg-gray-800"
+              >
                 <ChevronLeft className="w-4 h-4 mr-1" /> Back to Site
               </Button>
             </Link>
-            <h1 className="text-xl font-bold">PageCraft Admin</h1>
+            <h1 className="text-xl font-bold">Yashaswin Admin</h1>
           </div>
-          
-          <Button 
-            variant="ghost" 
+
+          <Button
+            variant="ghost"
             size="sm"
             className="text-white hover:bg-gray-800"
             onClick={() => logoutMutation.mutate()}
@@ -65,22 +69,26 @@ function AdminHeader() {
 // User Account Header Component
 function UserAccountHeader() {
   const { logoutMutation } = useAuth();
-  
+
   return (
     <header className="bg-primary text-white shadow-md">
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <Link href="/">
-              <Button variant="outline" size="sm" className="text-white border-white hover:bg-primary/80">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-white border-white hover:bg-primary/80"
+              >
                 <ChevronLeft className="w-4 h-4 mr-1" /> Back to Site
               </Button>
             </Link>
             <h1 className="text-xl font-bold">My Account</h1>
           </div>
-          
-          <Button 
-            variant="ghost" 
+
+          <Button
+            variant="ghost"
             size="sm"
             className="text-white hover:bg-primary/80"
             onClick={() => logoutMutation.mutate()}
@@ -105,7 +113,7 @@ function Router() {
           </main>
         </div>
       </Route>
-      
+
       {/* User Dashboard Route with User Account Layout */}
       <Route path="/user-dashboard">
         <div className="flex flex-col min-h-screen bg-gray-50">
@@ -115,7 +123,7 @@ function Router() {
           </main>
         </div>
       </Route>
-      
+
       {/* Author Dashboard Route with User Account Layout */}
       <Route path="/author-dashboard">
         <div className="flex flex-col min-h-screen bg-gray-50">
@@ -125,7 +133,7 @@ function Router() {
           </main>
         </div>
       </Route>
-      
+
       {/* Standard Website Routes with Header and Footer */}
       <Route>
         <div className="flex flex-col min-h-screen">
@@ -141,7 +149,10 @@ function Router() {
               <Route path="/contact" component={ContactPage} />
               <Route path="/checkout" component={CheckoutPage} />
               <Route path="/pricing" component={PricingPage} />
-              <Route path="/publishing-process" component={PublishingProcessPage} />
+              <Route
+                path="/publishing-process"
+                component={PublishingProcessPage}
+              />
               <ProtectedRoute path="/dashboard" component={AuthorDashboard} />
               <ProtectedRoute path="/account" component={AccountPage} />
               <AdminRoute path="/admin" component={AdminPanel} />

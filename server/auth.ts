@@ -40,7 +40,7 @@ async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "pagecraft-secret-key",
+    secret: process.env.SESSION_SECRET || "Yashaswin-secret-key",
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
