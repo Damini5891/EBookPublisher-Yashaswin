@@ -18,6 +18,7 @@ import BookDetailPage from "@/pages/book-detail-page";
 import AboutPage from "@/pages/about-page";
 import ContactPage from "@/pages/contact-page";
 import AuthorDashboard from "@/pages/author-dashboard";
+import AccountPage from "@/pages/account-page";
 import CheckoutPage from "@/pages/checkout-page";
 import PricingPage from "@/pages/pricing-page";
 import PublishingProcessPage from "@/pages/publishing-process-page";
@@ -40,6 +41,7 @@ function Router() {
           <Route path="/pricing" component={PricingPage} />
           <Route path="/publishing-process" component={PublishingProcessPage} />
           <ProtectedRoute path="/dashboard" component={AuthorDashboard} />
+          <ProtectedRoute path="/account" component={AccountPage} />
           <Route component={NotFound} />
         </Switch>
       </main>

@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   fullName: text("full_name"),
   bio: text("bio"),
+  avatarUrl: text("avatar_url"),
   isAuthor: boolean("is_author").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -17,6 +18,7 @@ export const books = pgTable("books", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   authorId: integer("author_id").references(() => users.id),
+  authorName: text("author_name"),
   description: text("description"),
   coverImage: text("cover_image"),
   price: integer("price").notNull(),
@@ -24,6 +26,7 @@ export const books = pgTable("books", {
   publishedDate: timestamp("published_date").defaultNow(),
   rating: integer("rating").default(0),
   reviewCount: integer("review_count").default(0),
+  isDownloadable: boolean("is_downloadable").default(true),
 });
 
 export const manuscripts = pgTable("manuscripts", {
@@ -42,7 +45,10 @@ export const orders = pgTable("orders", {
   userId: integer("user_id").references(() => users.id),
   bookIds: text("book_ids").array(),
   total: integer("total").notNull(),
+  totalAmount: integer("total_amount").notNull(),
+  status: text("status").default("pending"),
   paymentStatus: text("payment_status").default("pending"),
+  items: jsonb("items"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

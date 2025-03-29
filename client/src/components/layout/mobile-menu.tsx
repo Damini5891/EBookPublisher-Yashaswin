@@ -51,6 +51,14 @@ const MobileMenu = ({
               Hello, {user.username}
             </div>
             <Button 
+              variant="outline"
+              asChild
+              className="border-primary text-primary hover:bg-primary hover:text-white mb-2"
+              onClick={onLoginClick}
+            >
+              <Link href="/account">My Account</Link>
+            </Button>
+            <Button 
               variant="outline" 
               onClick={onLogoutClick}
               className="border-primary text-primary hover:bg-primary hover:text-white"

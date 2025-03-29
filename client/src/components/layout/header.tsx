@@ -87,6 +87,13 @@ const Header = () => {
                   Hello, {user.username}
                 </span>
                 <Button 
+                  variant="outline"
+                  asChild
+                  className="border-primary text-primary hover:bg-primary hover:text-white mr-2"
+                >
+                  <Link href="/account">My Account</Link>
+                </Button>
+                <Button 
                   variant="outline" 
                   onClick={handleLogout}
                   className="border-primary text-primary hover:bg-primary hover:text-white"
