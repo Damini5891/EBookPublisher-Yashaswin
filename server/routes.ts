@@ -9,7 +9,8 @@ import {
   insertManuscriptSchema, 
   insertReviewSchema,
   insertBookSchema,
-  insertNotificationSchema
+  insertNotificationSchema,
+  User
 } from "@shared/schema";
 
 // Use Stripe or placeholder for development
@@ -120,30 +121,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/admin/users/:id", isAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      
-      const user = await storage.getUser(id);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      const updatedUser = await storage.updateUser(id, req.body);
-      res.json(updatedUser);
-    } catch (error) {
-      res.status(500).json({ message: "Error updating user" });
-    }
-  });
-  
   app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Prevent deleting the current admin user
+      if (id === req.user?.id) {
+        return res.status(400).json({ message: "Cannot delete your own admin account" });
       }
       
       const success = await storage.deleteUser(id);
@@ -154,6 +141,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "User deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Error deleting user" });
+    }
+  });
+  
+  // Update user information
+  app.patch("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const updates = req.body;
+      
+      // Only allow changing specific fields
+      const allowedUpdates = ['username', 'email', 'fullName', 'isAuthor', 'isAdmin', 'avatarUrl', 'bio'] as const;
+      type AllowedUpdateKeys = typeof allowedUpdates[number];
+      
+      // Create a properly typed filtered updates object
+      const filteredUpdates = {} as Partial<User>;
+      
+      // Only copy allowed keys
+      for (const key of allowedUpdates) {
+        if (key in updates) {
+          // Use type assertion since we've verified the key exists
+          (filteredUpdates as any)[key] = updates[key as keyof typeof updates];
+        }
+      }
+      
+      // Don't allow removing admin status from yourself
+      if (id === req.user?.id && filteredUpdates.isAdmin === false) {
+        return res.status(400).json({ message: "Cannot remove admin status from your own account" });
+      }
+      
+      const updatedUser = await storage.updateUser(id, filteredUpdates);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ message: "Error updating user" });
     }
   });
   

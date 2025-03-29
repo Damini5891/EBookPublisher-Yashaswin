@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getQueryFn, apiRequest, queryClient } from '@/lib/queryClient';
-import { User, Book, Manuscript, Order, Contact } from '@shared/schema';
-import { Loader2, Users, BookOpen, FileText, ShoppingCart, MessageSquare, Bell, CheckCircle, AlertCircle, Settings } from 'lucide-react';
+import { User, Book, Manuscript, Order, Contact, Review, Notification, InsertBook, InsertUser } from '@shared/schema';
+import { 
+  Loader2, Users, BookOpen, FileText, ShoppingCart, MessageSquare, Bell, CheckCircle, 
+  AlertCircle, Settings, PlusCircle, Edit, Trash, Eye, Send, UserCog, DollarSign,
+  Package, BarChart4, Zap, BookMarked, ShieldAlert, BookCheck, CalendarDays, Download
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,14 +17,299 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatPrice } from '@/lib/utils';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Progress } from '@/components/ui/progress';
+import { formatPrice, truncateText } from '@/lib/utils';
+import { 
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, 
+  DialogTitle, DialogTrigger, DialogClose 
+} from "@/components/ui/dialog";
+import { 
+  Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage 
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { BOOK_GENRES } from '@/lib/constants';
 import { Redirect } from 'wouter';
+
+// Book Form component for add/edit book functionality
+interface BookFormProps {
+  book: Book | null;
+  onSubmit: (data: any) => void;
+  isPending: boolean;
+}
+
+function BookForm({ book, onSubmit, isPending }: BookFormProps) {
+  // Create book form schema with validation
+  const bookFormSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().min(10, "Description must be at least 10 characters"),
+    authorId: z.coerce.number().int().positive("Author ID is required"),
+    coverImage: z.string().optional(),
+    price: z.coerce.number().min(0, "Price must be a positive number"),
+    genre: z.string().min(1, "Genre is required"),
+    pageCount: z.coerce.number().int().positive("Page count must be a positive number").optional(),
+    language: z.string().optional(),
+    isPublished: z.boolean().default(true),
+    publicationDate: z.string().optional(),
+    isbn: z.string().optional(),
+    tags: z.string().optional(),
+  });
+
+  // Initialize form with default values from book or empty values
+  const form = useForm<z.infer<typeof bookFormSchema>>({
+    resolver: zodResolver(bookFormSchema),
+    defaultValues: book ? {
+      title: book.title,
+      description: book.description || "",
+      authorId: book.authorId || 0,
+      coverImage: book.coverImage || "",
+      price: book.price,
+      genre: book.genre || "",
+      // Add extra fields needed for the form but not in the DB schema
+      pageCount: 0, 
+      language: "English",
+      isPublished: true,
+      publicationDate: "",
+      isbn: "",
+      tags: "",
+    } : {
+      title: "",
+      description: "",
+      authorId: 0,
+      coverImage: "",
+      price: 0,
+      genre: "",
+      pageCount: 0,
+      language: "English",
+      isPublished: true,
+      publicationDate: new Date().toISOString().split("T")[0],
+      isbn: "",
+      tags: "",
+    }
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title</FormLabel>
+                <FormControl>
+                  <Input placeholder="Book title" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="authorId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Author ID</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormDescription>ID of the author in the system</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="genre"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Genre</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a genre" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {BOOK_GENRES.map((genre) => (
+                      <SelectItem key={genre} value={genre}>{genre}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price ($)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="coverImage"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cover Image URL</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://example.com/image.jpg" {...field} />
+                </FormControl>
+                <FormDescription>Direct link to cover image</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="pageCount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Page Count</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="language"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Language</FormLabel>
+                <FormControl>
+                  <Input placeholder="English" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="isbn"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ISBN</FormLabel>
+                <FormControl>
+                  <Input placeholder="ISBN-13" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="publicationDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Publication Date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="tags"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tags</FormLabel>
+                <FormControl>
+                  <Input placeholder="Comma-separated tags" {...field} />
+                </FormControl>
+                <FormDescription>Separate tags with commas</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="isPublished"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Published</FormLabel>
+                  <FormDescription>
+                    Make this book visible in the store
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Book description" 
+                  className="min-h-[120px]" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <DialogFooter>
+          <Button type="submit" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {book ? 'Update Book' : 'Add Book'}
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
+  );
+}
 
 export default function AdminPanel() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isBookDialogOpen, setIsBookDialogOpen] = useState(false);
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [isNotificationDialogOpen, setIsNotificationDialogOpen] = useState(false);
+  const [targetUserId, setTargetUserId] = useState<number | null>(null);
 
   // Redirect non-admin users
   if (!isAuthLoading && (!user || !user.isAdmin)) {
@@ -117,6 +406,176 @@ export default function AdminPanel() {
     onError: (error: Error) => {
       toast({
         title: 'Delete Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // User Management Mutations
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ id, userData }: { id: number; userData: Partial<User> }) => {
+      const res = await apiRequest('PATCH', `/api/admin/users/${id}`, userData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({
+        title: 'User Updated',
+        description: 'The user information has been updated successfully',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Update Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/admin/users/${id}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      toast({
+        title: 'User Deleted',
+        description: 'The user account has been permanently deleted',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Delete Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Book Management Mutations
+  const createBookMutation = useMutation({
+    mutationFn: async (bookData: Partial<InsertBook>) => {
+      const res = await apiRequest('POST', '/api/admin/books', bookData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/books'] });
+      toast({
+        title: 'Book Created',
+        description: 'The book has been successfully added to the store',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Creation Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const updateBookMutation = useMutation({
+    mutationFn: async ({ id, bookData }: { id: number; bookData: Partial<Book> }) => {
+      const res = await apiRequest('PATCH', `/api/admin/books/${id}`, bookData);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/books'] });
+      toast({
+        title: 'Book Updated',
+        description: 'The book information has been updated successfully',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Update Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteBookMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/admin/books/${id}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/books'] });
+      toast({
+        title: 'Book Deleted',
+        description: 'The book has been permanently removed from the store',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Delete Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteManuscriptMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/admin/manuscripts/${id}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/manuscripts'] });
+      toast({
+        title: 'Manuscript Deleted',
+        description: 'The manuscript has been permanently deleted',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Delete Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Order Management Mutations
+  const deleteOrderMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/admin/orders/${id}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/orders'] });
+      toast({
+        title: 'Order Deleted',
+        description: 'The order has been permanently deleted',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Delete Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Notification Management
+  const sendNotificationMutation = useMutation({
+    mutationFn: async (notificationData: { userId: number; title: string; message: string; type: string }) => {
+      const res = await apiRequest('POST', '/api/admin/notifications', {
+        ...notificationData,
+        isRead: false
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Notification Sent',
+        description: 'The notification has been sent to the user',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Sending Failed',
         description: error.message,
         variant: 'destructive',
       });
