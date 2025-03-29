@@ -1,11 +1,12 @@
-import { users, books, manuscripts, orders, reviews, contacts } from "@shared/schema";
+import { users, books, manuscripts, orders, reviews, contacts, notifications } from "@shared/schema";
 import type { 
   User, InsertUser, 
   Book, InsertBook, 
   Manuscript, InsertManuscript, 
   Order, InsertOrder, 
   Review, InsertReview, 
-  Contact, InsertContact
+  Contact, InsertContact,
+  Notification, InsertNotification
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -17,6 +18,9 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
+  deleteUser(id: number): Promise<boolean>;
   
   // Book operations
   getBooks(): Promise<Book[]>;
@@ -24,28 +28,46 @@ export interface IStorage {
   getBooksByAuthor(authorId: number): Promise<Book[]>;
   getBooksByGenre(genre: string): Promise<Book[]>;
   createBook(book: InsertBook): Promise<Book>;
+  updateBook(id: number, updates: Partial<Book>): Promise<Book | undefined>;
+  deleteBook(id: number): Promise<boolean>;
   
   // Manuscript operations
   getManuscripts(authorId: number): Promise<Manuscript[]>;
+  getAllManuscripts(): Promise<Manuscript[]>;
   getManuscript(id: number): Promise<Manuscript | undefined>;
   createManuscript(manuscript: InsertManuscript): Promise<Manuscript>;
   updateManuscript(id: number, manuscript: Partial<InsertManuscript>): Promise<Manuscript | undefined>;
+  deleteManuscript(id: number): Promise<boolean>;
   
   // Order operations
   getOrders(userId: number): Promise<Order[]>;
+  getAllOrders(): Promise<Order[]>;
   getOrder(id: number): Promise<Order | undefined>;
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrderStatus(id: number, status: string): Promise<Order | undefined>;
+  deleteOrder(id: number): Promise<boolean>;
   
   // Review operations
   getReviews(bookId: number): Promise<Review[]>;
+  getAllReviews(): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
+  deleteReview(id: number): Promise<boolean>;
   
   // Contact operations
+  getAllContacts(): Promise<Contact[]>;
+  getContact(id: number): Promise<Contact | undefined>;
   createContact(contact: InsertContact): Promise<Contact>;
+  deleteContact(id: number): Promise<boolean>;
+  
+  // Notification operations
+  getNotificationsByUser(userId: number): Promise<Notification[]>;
+  getAllNotifications(): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number): Promise<Notification | undefined>;
+  deleteNotification(id: number): Promise<boolean>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
@@ -55,8 +77,9 @@ export class MemStorage implements IStorage {
   private orders: Map<number, Order>;
   private reviews: Map<number, Review>;
   private contacts: Map<number, Contact>;
+  private notifications: Map<number, Notification>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
   
   private userCurrentId: number;
   private bookCurrentId: number;
@@ -64,6 +87,7 @@ export class MemStorage implements IStorage {
   private orderCurrentId: number;
   private reviewCurrentId: number;
   private contactCurrentId: number;
+  private notificationCurrentId: number;
 
   constructor() {
     this.users = new Map();
@@ -72,6 +96,7 @@ export class MemStorage implements IStorage {
     this.orders = new Map();
     this.reviews = new Map();
     this.contacts = new Map();
+    this.notifications = new Map();
     
     this.userCurrentId = 1;
     this.bookCurrentId = 1;
@@ -79,13 +104,15 @@ export class MemStorage implements IStorage {
     this.orderCurrentId = 1;
     this.reviewCurrentId = 1;
     this.contactCurrentId = 1;
+    this.notificationCurrentId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // prune expired entries every 24h
     });
     
-    // Seed some initial books
+    // Seed some initial books and admin users
     this.seedBooks();
+    this.seedAdmins();
   }
 
   // User operations
@@ -103,9 +130,15 @@ export class MemStorage implements IStorage {
     const id = this.userCurrentId++;
     const now = new Date();
     const user: User = { 
-      ...insertUser, 
-      id, 
+      id,
+      username: insertUser.username,
+      password: insertUser.password,
+      email: insertUser.email,
+      fullName: insertUser.fullName || null,
+      bio: null,
+      avatarUrl: null,
       isAuthor: false,
+      isAdmin: false,
       createdAt: now
     };
     this.users.set(id, user);
@@ -137,11 +170,18 @@ export class MemStorage implements IStorage {
     const id = this.bookCurrentId++;
     const now = new Date();
     const book: Book = { 
-      ...insertBook, 
-      id, 
+      id,
+      title: insertBook.title,
+      authorId: insertBook.authorId || null,
+      authorName: null,
+      description: insertBook.description || null,
+      coverImage: insertBook.coverImage || null,
+      price: insertBook.price,
+      genre: insertBook.genre || null,
       publishedDate: now,
       rating: 0,
-      reviewCount: 0
+      reviewCount: 0,
+      isDownloadable: true
     };
     this.books.set(id, book);
     return book;
@@ -162,8 +202,12 @@ export class MemStorage implements IStorage {
     const id = this.manuscriptCurrentId++;
     const now = new Date();
     const manuscript: Manuscript = { 
-      ...insertManuscript, 
-      id, 
+      id,
+      title: insertManuscript.title,
+      authorId: insertManuscript.authorId || null,
+      content: insertManuscript.content || null,
+      status: insertManuscript.status || 'draft',
+      coverDesign: insertManuscript.coverDesign || null,
       submittedAt: now,
       updatedAt: now
     };
@@ -200,10 +244,15 @@ export class MemStorage implements IStorage {
     const id = this.orderCurrentId++;
     const now = new Date();
     const order: Order = { 
-      ...insertOrder, 
-      id, 
+      id,
+      userId: insertOrder.userId || null,
+      bookIds: insertOrder.bookIds || null,
+      total: insertOrder.total,
+      status: 'pending',
+      totalAmount: insertOrder.total,
       paymentStatus: "pending",
-      createdAt: now
+      createdAt: now,
+      items: []
     };
     this.orders.set(id, order);
     return order;
@@ -232,24 +281,29 @@ export class MemStorage implements IStorage {
     const id = this.reviewCurrentId++;
     const now = new Date();
     const review: Review = { 
-      ...insertReview, 
-      id, 
+      id,
+      userId: insertReview.userId || null,
+      bookId: insertReview.bookId || null,
+      rating: insertReview.rating,
+      comment: insertReview.comment || null,
       createdAt: now
     };
     this.reviews.set(id, review);
     
     // Update book rating
-    const book = this.books.get(insertReview.bookId);
-    if (book) {
-      const reviews = await this.getReviews(book.id);
-      const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-      const avgRating = Math.round(totalRating / reviews.length);
-      
-      this.books.set(book.id, {
-        ...book,
-        rating: avgRating,
-        reviewCount: reviews.length
-      });
+    if (review.bookId !== null) {
+      const book = this.books.get(review.bookId);
+      if (book) {
+        const reviews = await this.getReviews(book.id);
+        const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+        const avgRating = Math.round(totalRating / reviews.length);
+        
+        this.books.set(book.id, {
+          ...book,
+          rating: avgRating,
+          reviewCount: reviews.length
+        });
+      }
     }
     
     return review;
@@ -260,12 +314,131 @@ export class MemStorage implements IStorage {
     const id = this.contactCurrentId++;
     const now = new Date();
     const contact: Contact = { 
-      ...insertContact, 
-      id, 
+      id,
+      name: insertContact.name,
+      email: insertContact.email,
+      subject: insertContact.subject,
+      message: insertContact.message,
       createdAt: now
     };
     this.contacts.set(id, contact);
     return contact;
+  }
+
+  // Admin methods
+  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser: User = { 
+      ...user, 
+      ...updates
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    return this.users.delete(id);
+  }
+
+  async updateBook(id: number, updates: Partial<Book>): Promise<Book | undefined> {
+    const book = this.books.get(id);
+    if (!book) return undefined;
+    
+    const updatedBook: Book = { 
+      ...book, 
+      ...updates
+    };
+    this.books.set(id, updatedBook);
+    return updatedBook;
+  }
+
+  async deleteBook(id: number): Promise<boolean> {
+    return this.books.delete(id);
+  }
+
+  async getAllManuscripts(): Promise<Manuscript[]> {
+    return Array.from(this.manuscripts.values());
+  }
+
+  async deleteManuscript(id: number): Promise<boolean> {
+    return this.manuscripts.delete(id);
+  }
+
+  async getAllOrders(): Promise<Order[]> {
+    return Array.from(this.orders.values());
+  }
+
+  async deleteOrder(id: number): Promise<boolean> {
+    return this.orders.delete(id);
+  }
+
+  async getAllReviews(): Promise<Review[]> {
+    return Array.from(this.reviews.values());
+  }
+
+  async deleteReview(id: number): Promise<boolean> {
+    return this.reviews.delete(id);
+  }
+
+  async getAllContacts(): Promise<Contact[]> {
+    return Array.from(this.contacts.values());
+  }
+
+  async getContact(id: number): Promise<Contact | undefined> {
+    return this.contacts.get(id);
+  }
+
+  async deleteContact(id: number): Promise<boolean> {
+    return this.contacts.delete(id);
+  }
+
+  // Notification operations
+  async getNotificationsByUser(userId: number): Promise<Notification[]> {
+    return Array.from(this.notifications.values()).filter(
+      (notification) => notification.userId === userId,
+    );
+  }
+
+  async getAllNotifications(): Promise<Notification[]> {
+    return Array.from(this.notifications.values());
+  }
+
+  async createNotification(insertNotification: InsertNotification): Promise<Notification> {
+    const id = this.notificationCurrentId++;
+    const now = new Date();
+    const notification: Notification = { 
+      id,
+      title: insertNotification.title,
+      message: insertNotification.message,
+      type: insertNotification.type || null,
+      userId: insertNotification.userId || null,
+      isRead: false,
+      createdAt: now
+    };
+    this.notifications.set(id, notification);
+    return notification;
+  }
+
+  async markNotificationAsRead(id: number): Promise<Notification | undefined> {
+    const notification = this.notifications.get(id);
+    if (!notification) return undefined;
+    
+    const updatedNotification: Notification = { 
+      ...notification, 
+      isRead: true 
+    };
+    this.notifications.set(id, updatedNotification);
+    return updatedNotification;
+  }
+
+  async deleteNotification(id: number): Promise<boolean> {
+    return this.notifications.delete(id);
   }
 
   // Seed initial data
@@ -347,8 +520,59 @@ export class MemStorage implements IStorage {
         genre: book.genre,
         publishedDate,
         rating: Math.floor(Math.random() * 5) + 1, // Random rating 1-5
-        reviewCount: Math.floor(Math.random() * 100) + 1, // Random number of reviews
+        reviewCount: Math.floor(Math.random() * 100) + 1, // Random number of reviews,
+        authorName: `Author ${authorId}`,
+        isDownloadable: true
       });
+    });
+  }
+
+  // Seed admin users
+  private seedAdmins() {
+    // Create admin accounts
+    const now = new Date();
+    const adminUsers = [
+      {
+        id: this.userCurrentId++,
+        username: 'admin',
+        password: '6ba21fbbe66fa9935f5a1a2107c10cfeaad3dad8082bd2edeca6cb51f7343d41.f6d39775a44b6aa7f1541c61c8c76cd0', // "admin123"
+        email: 'admin@pagecraft.com',
+        fullName: 'Admin User',
+        bio: 'System administrator',
+        avatarUrl: 'https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff',
+        isAuthor: false,
+        isAdmin: true,
+        createdAt: now
+      },
+      {
+        id: this.userCurrentId++,
+        username: 'manager',
+        password: '6ba21fbbe66fa9935f5a1a2107c10cfeaad3dad8082bd2edeca6cb51f7343d41.f6d39775a44b6aa7f1541c61c8c76cd0', // "admin123"
+        email: 'manager@pagecraft.com',
+        fullName: 'Content Manager',
+        bio: 'Content and books manager',
+        avatarUrl: 'https://ui-avatars.com/api/?name=Content+Manager&background=4B0082&color=fff',
+        isAuthor: true,
+        isAdmin: true,
+        createdAt: now
+      },
+      {
+        id: this.userCurrentId++,
+        username: 'support',
+        password: '6ba21fbbe66fa9935f5a1a2107c10cfeaad3dad8082bd2edeca6cb51f7343d41.f6d39775a44b6aa7f1541c61c8c76cd0', // "admin123"
+        email: 'support@pagecraft.com',
+        fullName: 'Support Team',
+        bio: 'Customer support representative',
+        avatarUrl: 'https://ui-avatars.com/api/?name=Support+Team&background=007000&color=fff',
+        isAuthor: false,
+        isAdmin: true,
+        createdAt: now
+      }
+    ];
+
+    // Add admin users to the store
+    adminUsers.forEach(admin => {
+      this.users.set(admin.id, admin);
     });
   }
 }

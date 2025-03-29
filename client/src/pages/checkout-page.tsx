@@ -1,11 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,26 +10,87 @@ import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
 import { Book } from "@shared/schema";
 
-// Payment form schema
-const paymentFormSchema = z.object({
-  cardName: z.string().min(3, "Cardholder name is required"),
-  cardNumber: z.string().refine(val => /^\d{16}$/.test(val), {
-    message: "Card number must be 16 digits"
-  }),
-  expiryDate: z.string().refine(val => /^\d{2}\/\d{2}$/.test(val), {
-    message: "Expiry date must be in MM/YY format"
-  }),
-  cvv: z.string().refine(val => /^\d{3,4}$/.test(val), {
-    message: "CVV must be 3 or 4 digits"
-  }),
-});
+// Make sure to call loadStripe outside of a component's render to avoid
+// recreating the Stripe object on every render.
+// This is your test publishable API key.
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+  : null;
+
+// Checkout form component using Stripe Elements
+const CheckoutForm = ({ clientSecret, onSuccess, total }: { clientSecret: string, onSuccess: () => void, total: number }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [message, setMessage] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsProcessing(true);
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: window.location.origin,
+      },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      setMessage(error.message || "An unknown error occurred");
+      toast({
+        title: "Payment Failed",
+        description: error.message || "An unknown error occurred",
+        variant: "destructive",
+      });
+    } else {
+      setMessage("Payment succeeded!");
+      toast({
+        title: "Payment Successful",
+        description: "Thank you for your purchase!",
+      });
+      onSuccess();
+    }
+
+    setIsProcessing(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="mb-6">
+        <PaymentElement />
+      </div>
+      {message && <div className="text-red-500 mb-4">{message}</div>}
+      <Button 
+        type="submit"
+        className="w-full bg-primary text-white"
+        disabled={isProcessing || !stripe || !elements}
+      >
+        {isProcessing ? (
+          <div className="flex items-center">
+            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+            Processing...
+          </div>
+        ) : (
+          `Pay ${formatPrice(total)}`
+        )}
+      </Button>
+    </form>
+  );
+};
 
 const CheckoutPage = () => {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(false);
   const [isPaymentSuccessful, setIsPaymentSuccessful] = useState(false);
+  const [clientSecret, setClientSecret] = useState("");
   
   // Simple cart - in a real app this would be managed by state management
   const cartItems = [
@@ -55,6 +113,43 @@ const CheckoutPage = () => {
     return sum + (book.price * (item?.quantity || 1));
   }, 0);
   
+  // Create Payment Intent when the page loads
+  useEffect(() => {
+    if (total <= 0 || !booksInCart.length) return;
+    
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to complete your purchase.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    // Create PaymentIntent on the server
+    const createPaymentIntent = async () => {
+      try {
+        const res = await apiRequest("POST", "/api/create-payment-intent", { 
+          amount: total
+        });
+        const data = await res.json();
+        setClientSecret(data.clientSecret);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Could not initialize payment system.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    // Only create payment intent if Stripe is available
+    if (stripePromise) {
+      createPaymentIntent();
+    }
+  }, [total, booksInCart.length, user, navigate, toast]);
+
   // Create an order mutation
   const createOrderMutation = useMutation({
     mutationFn: async () => {
@@ -67,75 +162,22 @@ const CheckoutPage = () => {
     },
     onSuccess: () => {
       setIsPaymentSuccessful(true);
-      setIsProcessing(false);
       toast({
-        title: "Payment successful",
+        title: "Order completed",
         description: "Your order has been processed successfully.",
       });
     },
     onError: (error: Error) => {
-      setIsProcessing(false);
       toast({
-        title: "Payment failed",
+        title: "Order failed",
         description: error.message,
         variant: "destructive",
       });
     },
   });
-  
-  // Payment form
-  const form = useForm<z.infer<typeof paymentFormSchema>>({
-    resolver: zodResolver(paymentFormSchema),
-    defaultValues: {
-      cardName: "",
-      cardNumber: "",
-      expiryDate: "",
-      cvv: "",
-    },
-  });
-  
-  const onSubmit = async (data: z.infer<typeof paymentFormSchema>) => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to complete your purchase.",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-    
-    setIsProcessing(true);
-    
-    try {
-      // In a real app, this would call to the Stripe API
-      // For this demo, we'll just simulate a payment
-      setTimeout(() => {
-        createOrderMutation.mutate();
-      }, 1500);
-    } catch (error) {
-      setIsProcessing(false);
-      toast({
-        title: "Payment failed",
-        description: "An error occurred while processing your payment.",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  // Format card number with spaces
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-    return v;
-  };
-  
-  // Format expiry date
-  const formatExpiryDate = (value: string) => {
-    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-    if (v.length > 2) {
-      return `${v.substring(0, 2)}/${v.substring(2, 4)}`;
-    }
-    return v;
+
+  const handlePaymentSuccess = () => {
+    createOrderMutation.mutate();
   };
 
   return (
@@ -144,7 +186,9 @@ const CheckoutPage = () => {
         {isPaymentSuccessful ? (
           <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <i className="ri-check-line text-green-600 text-3xl"></i>
+              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
             <h1 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Merriweather', serif" }}>Payment Successful!</h1>
             <p className="text-neutral-600 mb-6">
@@ -185,7 +229,7 @@ const CheckoutPage = () => {
                       return (
                         <div key={book.id} className="flex items-center">
                           <img 
-                            src={book.coverImage} 
+                            src={book.coverImage || "https://via.placeholder.com/128x196"} 
                             alt={`Cover of ${book.title}`} 
                             className="w-16 h-24 object-cover rounded-md mr-4"
                           />
@@ -221,7 +265,9 @@ const CheckoutPage = () => {
               ) : (
                 <div className="bg-white p-8 rounded-lg shadow-md text-center">
                   <div className="text-5xl mb-4 text-neutral-400">
-                    <i className="ri-shopping-cart-line"></i>
+                    <svg className="h-12 w-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
                   </div>
                   <h3 className="text-xl font-bold mb-2" style={{ fontFamily: "'Merriweather', serif" }}>Your Cart is Empty</h3>
                   <p className="text-neutral-600 mb-6">
@@ -239,7 +285,9 @@ const CheckoutPage = () => {
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h2 className="text-lg font-bold mb-4" style={{ fontFamily: "'Merriweather', serif" }}>Secure Purchase</h2>
                 <div className="flex items-center mb-4">
-                  <i className="ri-lock-line text-primary mr-2"></i>
+                  <svg className="h-5 w-5 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
                   <p className="text-sm text-neutral-600">
                     Your payment information is securely processed.
                   </p>
@@ -257,103 +305,33 @@ const CheckoutPage = () => {
               <h1 className="text-2xl font-bold mb-6" style={{ fontFamily: "'Merriweather', serif" }}>Payment Information</h1>
               
               <div className="bg-white p-6 rounded-lg shadow-md">
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="cardName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cardholder Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="John Smith" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                {stripePromise && clientSecret ? (
+                  <Elements stripe={stripePromise} options={{ clientSecret }}>
+                    <CheckoutForm 
+                      clientSecret={clientSecret}
+                      onSuccess={handlePaymentSuccess}
+                      total={total}
                     />
-                    
-                    <FormField
-                      control={form.control}
-                      name="cardNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Card Number</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="1234 5678 9012 3456" 
-                              maxLength={16}
-                              onChange={(e) => {
-                                field.onChange(formatCardNumber(e.target.value));
-                              }}
-                              value={field.value}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="expiryDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Expiry Date</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="MM/YY" 
-                                maxLength={5}
-                                onChange={(e) => {
-                                  field.onChange(formatExpiryDate(e.target.value));
-                                }}
-                                value={field.value}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                  </Elements>
+                ) : (
+                  <div className="text-center py-8">
+                    {total <= 0 || !booksInCart.length ? (
+                      <p>Add items to your cart to proceed with checkout.</p>
+                    ) : (
+                      <>
+                        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                        <p>Loading payment options...</p>
+                        {!stripePromise && (
+                          <div className="mt-4 p-4 bg-amber-50 text-amber-800 rounded-md">
+                            <p className="text-sm">
+                              Stripe API keys not configured. Please add your Stripe keys to enable payment processing.
+                            </p>
+                          </div>
                         )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="cvv"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>CVV</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="123" 
-                                maxLength={4}
-                                onChange={(e) => {
-                                  field.onChange(e.target.value.replace(/[^0-9]/g, ''));
-                                }}
-                                value={field.value}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <Button 
-                      type="submit"
-                      className="w-full bg-primary text-white"
-                      disabled={isProcessing || booksInCart.length === 0}
-                    >
-                      {isProcessing ? (
-                        <div className="flex items-center">
-                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                          Processing...
-                        </div>
-                      ) : (
-                        `Pay ${formatPrice(total)}`
-                      )}
-                    </Button>
-                  </form>
-                </Form>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

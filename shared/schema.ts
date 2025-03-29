@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   bio: text("bio"),
   avatarUrl: text("avatar_url"),
   isAuthor: boolean("is_author").default(false),
+  isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -70,6 +71,16 @@ export const contacts = pgTable("contacts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").default("info"), // info, warning, success, error
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users)
   .pick({
@@ -119,6 +130,13 @@ export const insertContactSchema = createInsertSchema(contacts).pick({
   message: true,
 });
 
+export const insertNotificationSchema = createInsertSchema(notifications).pick({
+  userId: true,
+  title: true,
+  message: true,
+  type: true,
+});
+
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
@@ -131,6 +149,7 @@ export type InsertManuscript = z.infer<typeof insertManuscriptSchema>;
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type InsertContact = z.infer<typeof insertContactSchema>;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Login = z.infer<typeof loginSchema>;
 
 export type User = typeof users.$inferSelect;
@@ -139,3 +158,4 @@ export type Manuscript = typeof manuscripts.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type Review = typeof reviews.$inferSelect;
 export type Contact = typeof contacts.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;
