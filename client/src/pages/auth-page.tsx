@@ -31,7 +31,14 @@ const AuthPage = () => {
 
   useEffect(() => {
     if (user) {
-      navigate("/");
+      // Redirect admin users directly to admin panel
+      if (user.isAdmin) {
+        navigate("/admin-panel");
+      } else if (user.isAuthor) {
+        navigate("/author-dashboard");
+      } else {
+        navigate("/user-dashboard");
+      }
     }
   }, [user, navigate]);
 
