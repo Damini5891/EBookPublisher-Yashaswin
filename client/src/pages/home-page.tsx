@@ -5,6 +5,8 @@ import ServiceCard from "@/components/ui/service-card";
 import BookCard from "@/components/ui/book-card";
 import FeatureCard from "@/components/ui/feature-card";
 import TestimonialCard from "@/components/ui/testimonial-card";
+import sunny from "../../../attached_assets/sunny.png";
+
 import {
   FEATURES,
   PUBLISHING_STEPS,
@@ -87,7 +89,7 @@ const HomePage = () => {
                     <i className="ri-book-line text-[#E94F37] text-xl"></i>
                   </div>
                   <div>
-                    <p className="text-white font-bold">10,000+</p>
+                    <p className="text-white font-bold">50+</p>
                     <p className="text-white text-sm">Published Books</p>
                   </div>
                 </div>
@@ -353,7 +355,7 @@ const HomePage = () => {
               </div>
               <div className="h-64 md:h-auto">
                 <img
-                  src={FEATURED_AUTHOR.image}
+                  src={sunny}
                   alt={`Author ${FEATURED_AUTHOR.name}`}
                   className="w-2/4 h-3/4 object-cover mx-auto mt-24"
                 />

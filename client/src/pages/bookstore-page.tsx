@@ -35,7 +35,6 @@ const BookstorePage = () => {
   };
 
   const filteredBooks = books.filter(book => {
-    // Filter by search query (title)
     const matchesSearch = searchQuery 
       ? book.title.toLowerCase().includes(searchQuery.toLowerCase()) 
       : true;

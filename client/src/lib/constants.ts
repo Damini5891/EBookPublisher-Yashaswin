@@ -177,11 +177,10 @@ export const TESTIMONIALS = [
 ];
 
 export const FEATURED_AUTHOR = {
-  name: 'Michelle Davies',
+  name: 'Dr Sarojini Tanhaa',
   role: 'Bestselling Author',
   bio: 'Michelle Davies is a bestselling author of contemporary fiction with over 500,000 copies sold worldwide. Her latest novel "Echoes of Tomorrow" was published through Yashaswin and reached #1 on multiple bestseller lists.',
   quote: 'Yashaswin\'s platform made my publishing journey seamless. From manuscript formatting to distribution, their tools and support team exceeded my expectations. I couldn\'t be happier with the results.',
-  image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80',
   stats: [
     { label: 'Books Published', value: '12' },
     { label: 'Copies Sold', value: '500k+' },

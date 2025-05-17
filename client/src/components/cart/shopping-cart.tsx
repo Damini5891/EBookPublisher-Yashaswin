@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { formatPrice } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, ShoppingCart, Plus, Minus, X, CreditCard, BookOpen, Info } from "lucide-react";
+import { Trash2, ShoppingCart as ShoppingCartIcon, Plus, Minus, X, CreditCard, BookOpen, Info } from "lucide-react";
 import { Book } from "@shared/schema";
 
 interface CartItem {
@@ -23,7 +23,7 @@ interface CartState {
   totalAmount: number;
 }
 
-export const ShoppingCart = ({ onClose }: { onClose?: () => void }) => {
+const ShoppingCart = ({ onClose }: { onClose?: () => void }) => {
   const [_, navigate] = useLocation();
   const { toast } = useToast();
   const [couponCode, setCouponCode] = useState("");
@@ -165,7 +165,7 @@ export const ShoppingCart = ({ onClose }: { onClose?: () => void }) => {
   if (cart.items.length === 0) {
     return (
       <div className="text-center py-8">
-        <ShoppingCart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+        <ShoppingCartIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
         <h3 className="text-lg font-medium mb-2">Your cart is empty</h3>
         <p className="text-gray-500 mb-6">
           Browse our bookstore to find your next favorite read
@@ -181,7 +181,7 @@ export const ShoppingCart = ({ onClose }: { onClose?: () => void }) => {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between pb-4">
         <h2 className="text-lg font-medium flex items-center">
-          <ShoppingCart className="mr-2 h-5 w-5" />
+          <ShoppingCartIcon className="mr-2 h-5 w-5" />
           Shopping Cart ({cart.items.length})
         </h2>
         <Button variant="outline" size="sm" onClick={handleClearCart}>

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { APP_NAME } from "@/lib/constants";
 import MobileMenu from "./mobile-menu";
-// Adjust this path to match your actual file location:
 import logoimage from "../../../../attached_assets/logoimage.svg";
 import logoname from "../../../../attached_assets/logoname.svg";
 
@@ -42,7 +41,7 @@ const Header = () => {
               <img
                 src={logoimage}
                 alt="Logo Image"
-                style={{ width: "100px", height: "80px" }}
+                style={{ width: "50px", height: "80px" }}
               />
               <img
                 src={logoname}

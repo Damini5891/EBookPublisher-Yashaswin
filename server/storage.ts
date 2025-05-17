@@ -201,16 +201,26 @@ export class MemStorage implements IStorage {
   async createManuscript(insertManuscript: InsertManuscript): Promise<Manuscript> {
     const id = this.manuscriptCurrentId++;
     const now = new Date();
-    const manuscript: Manuscript = { 
+    const manuscript: Manuscript = {
       id,
       title: insertManuscript.title,
       authorId: insertManuscript.authorId || null,
       content: insertManuscript.content || null,
       status: insertManuscript.status || 'draft',
       coverDesign: insertManuscript.coverDesign || null,
-      submittedAt: now,
+      description: null,      // default value if not provided
+      coverImage: null,       // default value if not provided
+      genre: null,            // default value if not provided
+      wordCount: 0,           // default value if not provided
+      feedback: null,         // default value if not provided
+      editorNotes: null,      // default value if not provided
+      targetAudience: null,   // default value if not provided
+      progressStage: null,    // default value if not provided
+      estimatedCompletionDate: null, // default value if not provided
+      createdAt: now,
       updatedAt: now
     };
+    
     this.manuscripts.set(id, manuscript);
     return manuscript;
   }

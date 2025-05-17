@@ -744,7 +744,7 @@ export default function AdminPanel() {
                           <h4 className="font-medium">{manuscript.title}</h4>
                           <p className="text-sm text-muted-foreground">Author ID: {manuscript.authorId}</p>
                           <p className="text-xs text-muted-foreground">
-                            Submitted: {new Date(manuscript.submittedAt || Date.now()).toLocaleDateString()}
+                            Submitted: {new Date(manuscript.createdAt || Date.now()).toLocaleDateString()}
                           </p>
                         </div>
                         <Button
@@ -930,7 +930,7 @@ export default function AdminPanel() {
                             <TableCell>{manuscript.id}</TableCell>
                             <TableCell className="font-medium">{manuscript.title}</TableCell>
                             <TableCell>ID: {manuscript.authorId}</TableCell>
-                            <TableCell>{new Date(manuscript.submittedAt || Date.now()).toLocaleDateString()}</TableCell>
+                            <TableCell>{new Date(manuscript.createdAt || Date.now()).toLocaleDateString()}</TableCell>
                             <TableCell>
                               <Badge 
                                 variant={manuscript.status === 'approved' ? 'default' : 
